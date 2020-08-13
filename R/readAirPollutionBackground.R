@@ -8,7 +8,7 @@ readBackgroundSheet <- function(file, sheet) {
     mutate(date = as.Date(date), station = sheet)
 }
 readAirPollutionBackground <- function() {
-  file <- here("data", PM25_hist_HPA.xlsx)
+  file <- here("data", "PM25_hist_HPA.xlsx")
   sheets <- excel_sheets(file)
   map_df(sheets, ~ readBackgroundSheet(file, sheet = .))
 }
@@ -18,4 +18,4 @@ readAirPollutionBackground <- function() {
 ## sheets <- excel_sheets(file)
 ## sheet <- sheets[1]
 ## readBackgroundSheet(file, sheet)
-## readAirPollutionBackground(file)
+## readAirPollutionBackground()

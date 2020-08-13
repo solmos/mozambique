@@ -1,5 +1,6 @@
 ## Air pollution
 readAirPollution <- function(file) {
+  file <- here("data", "air-pollution.xlsx")
   air_pollution <- read_excel(
     file,
     sheet = "All",
@@ -10,4 +11,3 @@ readAirPollution <- function(file) {
   air_pollution
 }
 
-## readAirPollution(here("data", "air-pollution.xlsx"))

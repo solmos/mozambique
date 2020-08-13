@@ -1,4 +1,5 @@
-readFireCounts <- function(file) {
+readFireCounts <- function() {
+  file <- here("data", "simplified.csv")
   fire_counts <- read_delim(file, delim = ";") %>%
     rename(date = "ACQ_DATE") %>%
     count(date) %>%
@@ -16,5 +17,3 @@ readFireCounts <- function(file) {
   fires_full
 }
 
-## readFireCounts(here("data", "simplified.csv"))
-## file <- here("data", "simplified.csv")

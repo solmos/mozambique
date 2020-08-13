@@ -1,0 +1,23 @@
+---
+title: Fire counts
+author: Sergio Olmos
+output:
+  html_document:
+    theme: cosmo
+---
+
+```{r setup, include = FALSE}
+source(here::here("R", "packages.R"))
+```
+## Fire counts
+
+Observations of fire events are available from the beginning of 2012 to the end of 2018.
+
+```{r}
+fire_events <- read_csv2(here("data", "simplified.csv")) %>%
+  rename(date = ACQ_DATE)
+fire_counts <- fire_events %>%
+  count(date)
+ggplot(fire_counts, aes(date, n)) +
+  geom_point()
+```

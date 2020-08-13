@@ -1,0 +1,66 @@
+---
+title: "Air pollution in Manhiça"
+author: "Sergio Olmos"
+output:
+  html_document:
+    theme: united
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r requirements}
+source(here::here("R", "packages.R"))
+source(here("R", "readAirPollution.R"))
+source(here("R", "readAirPollutionBackground.R"))
+source(here("R", "readFireCounts.R"))
+```
+
+```{r data}
+airpollution <- readAirPollution(here("data", "air-pollution.xlsx"))
+background <- readAirPollutionBackground(here("data", "PM25_hist_HPA.xlsx")) %>%
+  rename(pm25_background = pm25)
+fires <- readFireCounts(here("data", "simplified.csv"))
+```
+
+```{r}
+df <- airpollution %>%
+  left_join(background, by = "date") %>%
+  mutate(
+    week_day = weekdays(date),
+    month = month(date),
+    season = ifelse(month %in% 5:10, "dry", "wet"),
+    weekend = ifelse(week_day %in% c("Saturday", "Sunday"), TRUE, FALSE)
+  ) %>%
+  left_join(fires %>% select(date, n), by = "date") %>%
+  rename(fires = n)
+
+library(ggtext)
+ggplot(df) +
+  geom_line(aes(date, pm25), color = "#DD5C50") +
+  geom_line(aes(date, pm25_background), color = "grey37") +
+  facet_wrap(~station, nrow = 2) +
+  labs(
+    title = "Association between <span style='color:#DD5C50;'>SUMA</span> and background stations") +
+  theme(
+    plot.title = element_markdown(lineheight = 1.1)
+  )
+
+```
+
+### Correlation between SUMA and background stations AP measurements on the same day
+
+```{r}
+df %>%
+  drop_na() %>%
+  group_by(station) %>%
+  summarize(corr = cor(pm25, pm25_background)) %>%
+  knitr::kable()
+```
+
+### Simple linear regression model
+```{r}
+m1 <- lm(pm25 ~ pm25_background + season + weekend + fires, data = df)
+summary(m1)
+```

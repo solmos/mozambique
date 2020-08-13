@@ -1,0 +1,50 @@
+## Read temperature data
+
+source(here::here("R", "packages.R"))
+
+readTempSheet <- function(file, sheet, range = "A8:K38") {
+  var_names <- c("day", "temp_max", "temp_min", "temp_land", "evaporation",
+                 "temp_8h_max", "temp_8h_min", "temp_14h_max", "temp_14h_min",
+                 "pct_8h", "pct_14h")
+  read_excel(
+    file,
+    sheet,
+    range = range,
+    col_names = var_names
+  )
+}
+readTempFile <- function(file) {
+  sheets <- excel_sheets(file)
+  map_df(sheets, ~ readTempSheet(file, .), .id = "month")
+}
+## Sheet corresponding to October 2014 has different column headers
+## so we need to parse it differently than the rest.
+readTemperature <- function(files) {
+  temp <- map_df(files, readTempFile, .id = "year") %>%
+    mutate(
+      month = factor(month),
+      year = factor(year, levels = 1:2, labels = 2014:2015)
+    )
+  file2014 <- files[str_detect(files, "2014")]
+  temp2014_oct <- readTempSheet(file2014, "Outubro", "F8:P38") %>%
+    mutate(year = "1", month = "10") %>%
+    select(year, month, everything())
+  temp[temp$year == "1" & temp$month == "10",] <- temp2014_oct
+  ## Remove non existing days (i.e. February 30)
+  temp %>%
+    filter(!is.na(temp_max))
+}
+
+files <- c(
+  here("data", "temperature2014.xls"),
+  here("data", "temperature2015.xls")
+)
+temp <- readTemperature(files)
+temp
+## saveRDS(temp, file = here("data", "temperature-2014-2015.rds"))
+
+## Check NA values
+## temp %>%
+##   filter(is.na(temp_max)) %>%
+##   print(n = Inf)
+

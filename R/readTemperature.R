@@ -12,10 +12,18 @@ readTempSheet <- function(file, sheet, range = "A8:K38") {
   )
 }
 
-readTempFile <- function(file) {
+readTempFile <- function(file, year) {
   sheets <- excel_sheets(file)
-  map_df(sheets, ~ readTempSheet(file, .), .id = "month")
+  map_df(sheets, ~ readTempSheet(file, .), .id = "month") %>%
+    mutate(
+      year = year,
+      month = as.integer(month),
+      day = as.integer(day)
+    ) %>%
+    select(year, everything())
 }
+
+readTempFile(files[1], 2014)
 
 ## Sheet corresponding to October 2014 has different column headers
 ## so we need to parse it differently than the rest.
@@ -24,11 +32,8 @@ readTemperature <- function() {
     here("data", "temperature2014.xls"),
     here("data", "temperature2015.xls")
   )
-  temp <- map_df(files, readTempFile, .id = "year") %>%
-    mutate(
-      month = factor(month),
-      year = factor(year, levels = 1:2, labels = 2014:2015)
-    )
+  years <- 2014:2015
+  temp <- map2_df(files, years, readTempFile)
   file2014 <- files[str_detect(files, "2014")]
   temp2014_oct <- readTempSheet(file2014, "Outubro", "F8:P38") %>%
     mutate(year = "1", month = "10") %>%
@@ -36,6 +41,9 @@ readTemperature <- function() {
   temp[temp$year == "1" & temp$month == "10",] <- temp2014_oct
   ## Remove non existing days (i.e. February 30)
   temp %>%
-    filter(!is.na(temp_max))
+    filter(!is.na(temp_max)) %>%
+    mutate(date = make_date(year, month, day)) %>%
+    select(date, everything()) %>%
+    select(-year, -month, -day, -temp_land)
 }
 

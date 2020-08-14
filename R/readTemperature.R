@@ -23,8 +23,6 @@ readTempFile <- function(file, year) {
     select(year, everything())
 }
 
-readTempFile(files[1], 2014)
-
 ## Sheet corresponding to October 2014 has different column headers
 ## so we need to parse it differently than the rest.
 readTemperature <- function() {

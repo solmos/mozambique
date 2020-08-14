@@ -1,3 +1,3 @@
-## Maniça project
+## Manhiça project
 
 Predicting PM2.5 at Maniça.

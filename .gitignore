@@ -1,3 +1,4 @@
 data/
 .drake/
 renv/
+.Rplot

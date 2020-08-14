@@ -10,6 +10,8 @@ mergeData <- function(air.pollution, background, fire, aod, temperature) {
     ) %>%
     left_join(fire %>% select(date, n), by = "date") %>%
     rename(fires = n)
+
+  df
 }
 
 mergeData()

@@ -8,6 +8,7 @@ source("R/readAirPollutionBackground.R")
 source("R/readFireCounts.R")
 source("R/readTemperature.R")
 source("R/mergeData.R")
+source("R/models.R")
 source("R/plan.R")
 
 

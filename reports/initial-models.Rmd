@@ -1,0 +1,121 @@
+---
+title: "Initial prediction models for Manhiça"
+author: "Sergio Olmos"
+date: August 2020
+output:
+  html_document:
+    theme: cosmo
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+library(drake)
+library(dplyr)
+library(purrr)
+library(tidyr)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+```
+
+# Data
+
+```{r}
+loadd(air_pollution)
+
+air_pollution %>%
+  select(-volume, -oc_pm25) %>%
+  pivot_longer(
+    cols = c(pm25, ec, oc),
+    names_to = "pollutant",
+    values_to = "concentration"
+  ) %>%
+  ggplot(aes(date, concentration)) +
+  geom_line() +
+  facet_wrap(~pollutant, nrow = 2, scales = "free") +
+  labs(
+    title = "EC, OC, and PM2.5 exposures from SUMA",
+    y = paste0("\u00B5", "g/m³")
+  ) +
+  theme(axis.title.x = element_blank())
+```
+
+
+```{r}
+loadd(fire)
+
+ggplot(fire, aes(date, n)) +
+  geom_point(alpha = 0.3) +
+  labs(title = "Number of daily fires") +
+  theme(axis.title = element_blank())
+```
+
+
+```{r}
+loadd(air_pollution_background)
+
+ggplot(air_pollution_background, aes(date, pm25, color = station)) +
+  geom_line(alpha = 0.3) +
+  labs(
+    title = "PM2.5 concentration in South Africa background stations",
+    y = paste0("\u00B5", "g/m³")
+  ) +
+  theme(
+    legend.position = "bottom",
+    axis.title.x = element_blank()
+  )
+```
+
+
+```{r}
+loadd(aod)
+
+aod %>%
+  filter(tile == "h20") %>%
+  ggplot(aes(date, aod_med)) +
+  geom_line(alpha = 0.5) +
+  labs(title = "Median AOD estimates") +
+  theme(axis.title = element_blank())
+```
+
+
+```{r}
+loadd(temperature)
+
+ggplot(temperature, aes(date, temp_max)) +
+  geom_line(alpha = 0.5) +
+  labs(title = "Maximum temperature", y = paste0("\U00B0", "C")) +
+  theme(axis.title.x = element_blank())
+```
+
+# Models
+
+The same linear regression model was fit for the different outcome variables PM2.5, EC and OC and out-of-sample metrics were computed with LOOCV.
+
+Predictors:
+
+* Season (dry/wet)
+* Number of daily fires
+* PM2.5 concentration in Middelburg station
+* Median AOD
+
+
+```{r modeling}
+loadd(models)
+
+r2 <- map_dbl(models, function(m) summary(m)$adj.r.squared)
+metrics_loocv<- map_dfr(models, ~ .$results[2:4])
+
+tibble(outcome = readd(outcomes), r2, metrics_loocv) %>%
+  kable(digits = 2, col.names = c("Outcome", "Adjusted R²", "RMSE", "R²", "MAE")) %>%
+  kable_styling(
+    bootstrap_options = "striped",
+    full_width = FALSE,
+    position = "left"
+  ) %>%
+  add_header_above(c(" " = 2, "LOOCV" = 3))
+```
+
